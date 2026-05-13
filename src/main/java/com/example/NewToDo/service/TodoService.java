@@ -44,14 +44,8 @@ public class TodoService {
     /**
      * Update an existing todo
      */
-    public Optional<Todo> updateTodo(Long id, Todo todoDetails) {
-        return todoRepository.findById(id)
-                .map(existingTodo -> {
-                    existingTodo.setTitle(todoDetails.getTitle());
-                    existingTodo.setDescription(todoDetails.getDescription());
-                    existingTodo.setCompleted(todoDetails.getCompleted());
-                    return todoRepository.save(existingTodo);
-                });
+    public Todo updateTodo(Todo todo) {
+        return todoRepository.save(todo);
     }
     
     /**
