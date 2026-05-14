@@ -1,13 +1,13 @@
 package com.example.NewToDo.service;
 
 import com.example.NewToDo.entity.Todo;
+import com.example.NewToDo.exception.TodoNotFoundException;
 import com.example.NewToDo.repository.TodoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -25,9 +25,11 @@ public class TodoService {
     
     /**
      * Get todo by ID
+     * @throws TodoNotFoundException if todo with given id doesn't exist
      */
-    public Optional<Todo> getTodoById(Long id) {
-        return todoRepository.findById(id);
+    public Todo getTodoById(Long id) {
+        return todoRepository.findById(id)
+                .orElseThrow(() -> new TodoNotFoundException(id));
     }
     
     /**
@@ -50,24 +52,23 @@ public class TodoService {
     
     /**
      * Toggle todo completion status
+     * @throws TodoNotFoundException if todo with given id doesn't exist
      */
-    public Optional<Todo> toggleTodoCompletion(Long id) {
-        return todoRepository.findById(id)
-                .map(todo -> {
-                    todo.setCompleted(!todo.getCompleted());
-                    return todoRepository.save(todo);
-                });
+    public Todo toggleTodoCompletion(Long id) {
+        Todo todo = getTodoById(id); // This will throw TodoNotFoundException if not found
+        todo.setCompleted(!todo.getCompleted());
+        return todoRepository.save(todo);
     }
     
     /**
      * Delete a todo
+     * @throws TodoNotFoundException if todo with given id doesn't exist
      */
-    public boolean deleteTodo(Long id) {
-        if (todoRepository.existsById(id)) {
-            todoRepository.deleteById(id);
-            return true;
+    public void deleteTodo(Long id) {
+        if (!todoRepository.existsById(id)) {
+            throw new TodoNotFoundException(id);
         }
-        return false;
+        todoRepository.deleteById(id);
     }
     
     /**

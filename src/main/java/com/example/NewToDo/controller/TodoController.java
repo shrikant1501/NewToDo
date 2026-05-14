@@ -35,13 +35,13 @@ public class TodoController {
     
     /**
      * GET /api/todos/{id} - Get todo by ID
+     * Returns 404 if todo not found (handled by GlobalExceptionHandler)
      */
     @GetMapping("/{id}")
     public ResponseEntity<TodoResponse> getTodoById(@PathVariable Long id) {
-        return todoService.getTodoById(id)
-                .map(todoMapper::toResponse)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        Todo todo = todoService.getTodoById(id); // Throws TodoNotFoundException if not found
+        TodoResponse response = todoMapper.toResponse(todo);
+        return ResponseEntity.ok(response);
     }
     
     /**
@@ -57,40 +57,39 @@ public class TodoController {
     
     /**
      * PUT /api/todos/{id} - Update an existing todo
+     * Returns 404 if todo not found (handled by GlobalExceptionHandler)
      */
     @PutMapping("/{id}")
     public ResponseEntity<TodoResponse> updateTodo(
             @PathVariable Long id,
             @Valid @RequestBody TodoUpdateRequest request) {
         
-        return todoService.getTodoById(id)
-                .map(existingTodo -> {
-                    todoMapper.updateEntity(existingTodo, request);
-                    Todo updatedTodo = todoService.updateTodo(existingTodo);
-                    TodoResponse response = todoMapper.toResponse(updatedTodo);
-                    return ResponseEntity.ok(response);
-                })
-                .orElse(ResponseEntity.notFound().build());
+        Todo existingTodo = todoService.getTodoById(id); // Throws TodoNotFoundException if not found
+        todoMapper.updateEntity(existingTodo, request);
+        Todo updatedTodo = todoService.updateTodo(existingTodo);
+        TodoResponse response = todoMapper.toResponse(updatedTodo);
+        return ResponseEntity.ok(response);
     }
     
     /**
      * PATCH /api/todos/{id}/toggle - Toggle todo completion status
+     * Returns 404 if todo not found (handled by GlobalExceptionHandler)
      */
     @PatchMapping("/{id}/toggle")
     public ResponseEntity<TodoResponse> toggleTodoCompletion(@PathVariable Long id) {
-        return todoService.toggleTodoCompletion(id)
-                .map(todoMapper::toResponse)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        Todo todo = todoService.toggleTodoCompletion(id); // Throws TodoNotFoundException if not found
+        TodoResponse response = todoMapper.toResponse(todo);
+        return ResponseEntity.ok(response);
     }
     
     /**
      * DELETE /api/todos/{id} - Delete a todo
+     * Returns 404 if todo not found (handled by GlobalExceptionHandler)
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTodo(@PathVariable Long id) {
-        boolean deleted = todoService.deleteTodo(id);
-        return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+        todoService.deleteTodo(id); // Throws TodoNotFoundException if not found
+        return ResponseEntity.noContent().build();
     }
     
     /**
