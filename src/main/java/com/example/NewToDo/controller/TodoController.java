@@ -1,5 +1,6 @@
 package com.example.NewToDo.controller;
 
+import com.example.NewToDo.dto.PageResponse;
 import com.example.NewToDo.dto.TodoCreateRequest;
 import com.example.NewToDo.dto.TodoResponse;
 import com.example.NewToDo.dto.TodoUpdateRequest;
@@ -8,6 +9,10 @@ import com.example.NewToDo.mapper.TodoMapper;
 import com.example.NewToDo.service.TodoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -119,6 +124,41 @@ public class TodoController {
     public ResponseEntity<Void> deleteCompletedTodos() {
         todoService.deleteCompletedTodos();
         return ResponseEntity.noContent().build();
+    }
+    
+    /**
+     * GET /api/todos/paginated - Get paginated and sorted todos
+     *
+     * Query Parameters:
+     * - page: Page number (0-indexed, default: 0)
+     * - size: Number of items per page (default: 10)
+     * - sortBy: Field to sort by (default: createdAt)
+     * - sortDir: Sort direction - asc or desc (default: desc)
+     *
+     * Example: GET /api/todos/paginated?page=0&size=10&sortBy=title&sortDir=asc
+     */
+    @GetMapping("/paginated")
+    public ResponseEntity<PageResponse<TodoResponse>> getAllTodosPaginated(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+        
+        // Create sort direction
+        Sort.Direction direction = sortDir.equalsIgnoreCase("asc")
+            ? Sort.Direction.ASC
+            : Sort.Direction.DESC;
+        
+        // Create Pageable object
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        
+        // Get paginated todos from service (already mapped to DTOs)
+        Page<TodoResponse> responsePage = todoService.getAllTodosPaginated(pageable);
+        
+        // Create custom page response
+        PageResponse<TodoResponse> pageResponse = PageResponse.of(responsePage);
+        
+        return ResponseEntity.ok(pageResponse);
     }
 }
 
